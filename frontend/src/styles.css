@@ -210,6 +210,81 @@ th {
   color: #166534;
 }
 
+.chat-box {
+  margin-top: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px;
+  background: #f9fafb;
+  max-height: 280px;
+  overflow-y: auto;
+  display: grid;
+  gap: 10px;
+}
+
+.chat-row {
+  display: flex;
+}
+
+.chat-row.user {
+  justify-content: flex-end;
+}
+
+.chat-row.assistant {
+  justify-content: flex-start;
+}
+
+.chat-bubble {
+  max-width: 78%;
+  padding: 9px 12px;
+  border-radius: 12px;
+  white-space: pre-wrap;
+}
+
+.chat-row.user .chat-bubble {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.chat-row.assistant .chat-bubble {
+  background: #e5e7eb;
+  color: #1f2937;
+}
+
+.chat-meta {
+  margin-top: 6px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.source-badge {
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 3px 7px;
+  border-radius: 999px;
+}
+
+.source-badge.llm {
+  background: #ddd6fe;
+  color: #5b21b6;
+}
+
+.source-badge.fallback,
+.source-badge.system,
+.source-badge.unknown {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.chat-form {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+}
+
 @media (max-width: 640px) {
   .page {
     padding: 14px;

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { createTransaction, getTransactions, loginUser, registerUser } from "./api";
+import { askChatbot, createTransaction, getTransactions, loginUser, registerUser } from "./api";
 
 const initialForm = { email: "", password: "", fullName: "" };
 const initialTxForm = { amount: "", type: "credit", description: "" };
@@ -24,6 +24,16 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [chatInput, setChatInput] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
+  const [chatMessages, setChatMessages] = useState([
+    {
+      role: "assistant",
+      source: "system",
+      content:
+        "Hi! I am your banking assistant. Ask about your balance, spending, credits, or recent transactions."
+    }
+  ]);
 
   const isAuthenticated = useMemo(() => Boolean(token), [token]);
 
@@ -100,7 +110,43 @@ export default function App() {
     setToken("");
     setUser(null);
     setDashboard({ transactions: [], stats: { totalCredit: 0, totalDebit: 0, balance: 0 } });
+    setChatMessages([
+      {
+        role: "assistant",
+        source: "system",
+        content:
+          "Hi! I am your banking assistant. Ask about your balance, spending, credits, or recent transactions."
+      }
+    ]);
     setMessage("Logged out");
+  }
+
+  async function onSubmitChat(event) {
+    event.preventDefault();
+    const question = chatInput.trim();
+    if (!question) {
+      return;
+    }
+
+    setChatInput("");
+    setChatMessages((prev) => [...prev, { role: "user", content: question }]);
+
+    try {
+      setChatLoading(true);
+      const response = await askChatbot(token, question);
+      setChatMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          source: response.source || "unknown",
+          content: response.answer || "I could not generate an answer."
+        }
+      ]);
+    } catch (err) {
+      setChatMessages((prev) => [...prev, { role: "assistant", source: "system", content: err.message }]);
+    } finally {
+      setChatLoading(false);
+    }
   }
 
   if (!isAuthenticated) {
@@ -267,6 +313,41 @@ export default function App() {
             </table>
           </div>
         )}
+      </section>
+
+      <section className="card">
+        <h2>AI Transaction Assistant</h2>
+        <p className="subtitle">Ask questions like "What is my balance?" or "Show my recent transactions".</p>
+        <div className="chat-box">
+          {chatMessages.map((msg, idx) => (
+            <div key={`${msg.role}-${idx}`} className={msg.role === "user" ? "chat-row user" : "chat-row assistant"}>
+              <div className="chat-bubble">
+                {msg.content}
+                {msg.role === "assistant" && msg.source && (
+                  <div className="chat-meta">
+                    <span className={`source-badge ${msg.source}`}>{msg.source}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+          {chatLoading && (
+            <div className="chat-row assistant">
+              <div className="chat-bubble">Thinking...</div>
+            </div>
+          )}
+        </div>
+        <form onSubmit={onSubmitChat} className="chat-form">
+          <input
+            type="text"
+            value={chatInput}
+            onChange={(event) => setChatInput(event.target.value)}
+            placeholder="Ask about your transactions..."
+          />
+          <button type="submit" className="primary" disabled={chatLoading}>
+            Send
+          </button>
+        </form>
       </section>
 
       {error && <p className="error">{error}</p>}

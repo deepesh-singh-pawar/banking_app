@@ -28,11 +28,39 @@ services:
       DATABASE_URL: postgresql://banking_user:banking_password@database:5432/banking_app
       JWT_SECRET: super-secret-jwt-key-change-me
       CORS_ORIGIN: http://localhost:5173
+      CHATBOT_URL: http://chatbot:8000
     ports:
       - "4000:4000"
     depends_on:
       database:
         condition: service_healthy
+      chatbot:
+        condition: service_started
+
+  chatbot:
+    build:
+      context: ./chatbot
+    container_name: banking-chatbot
+    restart: unless-stopped
+    environment:
+      LLM_PROVIDER: none
+      OPENAI_API_KEY: ""
+      OPENAI_MODEL: gpt-4o-mini
+      OPENAI_BASE_URL: https://api.openai.com/v1
+      OLLAMA_MODEL: llama3.2:3b
+      OLLAMA_BASE_URL: http://ollama:11434
+    ports:
+      - "8000:8000"
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: banking-ollama
+    restart: unless-stopped
+    profiles: ["llm-local"]
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
 
   frontend:
     build:
@@ -48,3 +76,4 @@ services:
 
 volumes:
   postgres_data:
+  ollama_data:

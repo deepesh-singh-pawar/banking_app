@@ -50,3 +50,11 @@ export function createTransaction(token, data) {
     body: JSON.stringify(data)
   });
 }
+
+export function askChatbot(token, question) {
+  return request("/api/chatbot/ask", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ question })
+  });
+}

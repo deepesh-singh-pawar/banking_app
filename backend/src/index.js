@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import authRoutes from "./routes/auth.js";
 import transactionRoutes from "./routes/transactions.js";
+import chatbotRoutes from "./routes/chatbot.js";
 import { testDatabaseConnection } from "./db.js";
 
 const app = express();
@@ -21,6 +22,7 @@ app.get("/health", (_req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/transactions", transactionRoutes);
+app.use("/api/chatbot", chatbotRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ message: "Route not found" });
