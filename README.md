@@ -236,6 +236,94 @@ No manual DB setup is required because schema is automatically created from `dat
 No model download is required for fallback mode; chatbot starts quickly.
 Ollama mode requires model download.
 
+## Deploy on KIND (Kubernetes)
+
+This project includes Kubernetes manifests in `k8s/` with a dedicated namespace:
+- Namespace: `banking-app`
+
+### 1) Create KIND cluster
+
+```bash
+kind create cluster --config kind-config.yaml
+```
+
+This uses `kind-config.yaml` and maps NodePorts to localhost:
+- `30080` for frontend service
+- `30400` reserved for future API NodePort usage
+
+### 2) Build Docker images locally
+
+Run from project root:
+
+```bash
+docker build -t new-project-backend:latest ./backend
+docker build -t new-project-frontend:latest ./frontend
+docker build -t new-project-chatbot:latest ./chatbot
+```
+
+### 3) Load images into KIND
+
+```bash
+kind load docker-image new-project-backend:latest --name banking-kind
+kind load docker-image new-project-frontend:latest --name banking-kind
+kind load docker-image new-project-chatbot:latest --name banking-kind
+```
+
+### 4) Apply manifests (namespace-scoped)
+
+```bash
+kubectl apply -k k8s
+```
+
+### 5) Verify resources
+
+```bash
+kubectl get ns
+kubectl get pods -n banking-app
+kubectl get svc -n banking-app
+```
+
+### 6) Access application
+
+Frontend service is NodePort on `30080`:
+- `http://localhost:30080`
+
+If NodePort is not reachable in your environment, use port-forward:
+
+```bash
+kubectl port-forward -n banking-app svc/frontend 5173:5173
+```
+
+Then open:
+- `http://localhost:5173`
+
+### 7) Optional: Ollama in KIND
+
+Apply optional Ollama manifest:
+
+```bash
+kubectl apply -f k8s/06-ollama-optional.yaml
+```
+
+Then update chatbot provider in ConfigMap (set `LLM_PROVIDER=ollama`) and restart chatbot:
+
+```bash
+kubectl rollout restart deployment/chatbot -n banking-app
+```
+
+Pull model inside ollama pod:
+
+```bash
+kubectl exec -it -n banking-app deploy/ollama -- ollama pull llama3.2:3b
+```
+
+### 8) Cleanup
+
+```bash
+kubectl delete namespace banking-app
+kind delete cluster --name banking-kind
+```
+
 ## Security Notes (Important for Production)
 
 This project is configured for local development/demo. For production:

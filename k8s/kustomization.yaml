@@ -1,0 +1,9 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - 00-namespace.yaml
+  - 01-config-secret.yaml
+  - 02-database.yaml
+  - 03-chatbot.yaml
+  - 04-backend.yaml
+  - 05-frontend.yaml
